@@ -1,4 +1,4 @@
-package com.imap143.dto;
+package com.imap143.application.dto;
 
 import java.util.List;
 

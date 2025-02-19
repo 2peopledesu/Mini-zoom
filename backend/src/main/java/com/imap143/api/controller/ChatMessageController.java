@@ -1,4 +1,4 @@
-package com.imap143.controller;
+package com.imap143.api.controller;
 
 import java.util.HashMap;
 import java.util.List;
@@ -16,11 +16,12 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestHeader;
 
-import com.imap143.dto.ChatMessageDto;
-import com.imap143.model.ChatMessage;
-import com.imap143.service.ChatMessageService;
-import com.imap143.service.WebRTCService;
-import com.imap143.service.WebSocketSessionService;
+import com.imap143.api.dto.response.ChatMessageResponse;
+import com.imap143.application.dto.ChatMessageDto;
+import com.imap143.application.service.ChatMessageService;
+import com.imap143.application.service.WebRTCService;
+import com.imap143.application.service.WebSocketSessionService;
+import com.imap143.domain.entity.ChatMessage;
 
 import lombok.RequiredArgsConstructor;
 
@@ -42,7 +43,7 @@ public class ChatMessageController {
             log.info("Image URL: {}", messageDto.getImageUrl());
         }
         
-        ChatMessage saved = chatMessageService.saveMessage(messageDto);
+        ChatMessageResponse saved = chatMessageService.saveMessage(messageDto);
         log.info("Saved message: {}", saved);
         
         messagingTemplate.convertAndSend(TOPIC_ROOM + messageDto.getRoomId(), saved);
@@ -113,7 +114,7 @@ public class ChatMessageController {
         @PathVariable String roomId,
         @RequestHeader("X-User-Id") String userId) {
         try {
-            List<ChatMessage> messages = chatMessageService.getRoomMessages(roomId);
+            List<ChatMessageResponse> messages = chatMessageService.getRoomMessages(roomId);
             return ResponseEntity.ok(messages);
         } catch (Exception e) {
             Map<String, String> response = new HashMap<>();

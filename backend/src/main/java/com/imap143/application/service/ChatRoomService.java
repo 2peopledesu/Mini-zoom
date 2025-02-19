@@ -1,4 +1,4 @@
-package com.imap143.service;
+package com.imap143.application.service;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -8,9 +8,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
-import com.imap143.dto.ChatRoomDto;
-import com.imap143.model.ChatRoom;
-import com.imap143.repository.ChatRoomRepository;
+import com.imap143.api.dto.request.CreateRoomRequest;
+import com.imap143.api.dto.response.ChatRoomResponse;
+import com.imap143.application.dto.ChatRoomDto;
+import com.imap143.domain.entity.ChatRoom;
+import com.imap143.domain.repository.ChatRoomRepository;
 
 import lombok.RequiredArgsConstructor;
 
@@ -21,47 +23,48 @@ public class ChatRoomService {
     private final ChatRoomRepository chatRoomRepository;
     private static final Logger log = LoggerFactory.getLogger(ChatRoomService.class);
     
-    public ChatRoom createRoom(ChatRoomDto.CreateRequest request, String userId) {
+    public ChatRoomResponse createRoom(CreateRoomRequest request, String userId) {
+        ChatRoomDto dto = ChatRoomDto.from(request, userId);
         ChatRoom chatRoom = new ChatRoom();
         chatRoom.setId(UUID.randomUUID().toString());
-        chatRoom.setName(request.getName());
-        chatRoom.setCreatedBy(userId);
+        chatRoom.setName(dto.getName());
+        chatRoom.setCreatedBy(dto.getCreatedBy());
         chatRoom.setCreatedAt(System.currentTimeMillis());
         
         List<String> participants = new ArrayList<>();
         List<String> activeParticipants = new ArrayList<>();
         
-        participants.add(userId);
-        activeParticipants.add(userId);
+        participants.add(dto.getCreatedBy());
+        activeParticipants.add(dto.getCreatedBy());
         
         chatRoom.setParticipants(participants);
         chatRoom.setActiveParticipants(activeParticipants);
         
         ChatRoom savedRoom = chatRoomRepository.save(chatRoom);
-        log.info("Chat room created: {}", savedRoom);
-        return savedRoom;
+        return ChatRoomResponse.from(ChatRoomDto.from(savedRoom));
     }
     
-    public List<ChatRoom> getRooms() {
+    public List<ChatRoomResponse> getRooms() {
         List<ChatRoom> rooms = chatRoomRepository.findAll();
         log.info("All chat rooms retrieved from MongoDB: {}", rooms);
         
-        List<ChatRoom> activeRooms = rooms.stream()
+        return rooms.stream()
             .filter(room -> !room.getActiveParticipants().isEmpty())
+            .map(ChatRoomDto::from)
+            .map(ChatRoomResponse::from)
             .toList();
-        log.info("Chat rooms with active participants: {}", activeRooms);
-        
-        return activeRooms;
     }
 
-    public ChatRoom getRoom(String roomId) {
-        return chatRoomRepository.findById(roomId)
+    public ChatRoomResponse getRoom(String roomId) {
+        ChatRoom room = chatRoomRepository.findById(roomId)
                 .orElseThrow(() -> new RuntimeException("Chat room not found: " + roomId));
+        return ChatRoomResponse.from(ChatRoomDto.from(room));
     }
     
-    public ChatRoom joinRoom(String roomId, String userId) {
-        ChatRoom room = getRoom(roomId);
-        
+    public ChatRoomResponse joinRoom(String roomId, String userId) {
+        ChatRoom room = chatRoomRepository.findById(roomId)
+                .orElseThrow(() -> new RuntimeException("Chat room not found: " + roomId));
+
         synchronized (room) {
             List<String> activeParticipants = room.getActiveParticipants();
             if (!activeParticipants.contains(userId)) {
@@ -69,28 +72,33 @@ public class ChatRoomService {
                 if (!room.getParticipants().contains(userId)) {
                     room.getParticipants().add(userId);
                 }
-                log.info("User {} joined chat room {}. Current participants: {}", 
-                    userId, roomId, activeParticipants);
-                return chatRoomRepository.save(room);
+                log.info("User {} joined chat room {}. Current participants: {}",
+                        userId, roomId, activeParticipants);
+                return ChatRoomResponse.from(ChatRoomDto.from(chatRoomRepository.save(room)));
             }
-            return room;
         }
+        return ChatRoomResponse.from(ChatRoomDto.from(chatRoomRepository.save(room)));
     }
     
-    public ChatRoom leaveRoom(String roomId, String userId) {
-        ChatRoom room = getRoom(roomId);
+    public ChatRoomResponse leaveRoom(String roomId, String userId) {
+        ChatRoom room = chatRoomRepository.findById(roomId)
+                .orElseThrow(() -> new RuntimeException("Chat room not found: " + roomId));
         
         synchronized (room) {
             room.getActiveParticipants().remove(userId);
             room.getParticipants().remove(userId);
             log.info("User {} left chat room {}. Remaining participants: {}", 
                 userId, roomId, room.getActiveParticipants());
-            return chatRoomRepository.save(room);
+                return ChatRoomResponse.from(ChatRoomDto.from(chatRoomRepository.save(room)));
         }
     }
     
-    public List<ChatRoom> getUserRooms(String userId) {
-        return chatRoomRepository.findByParticipantsContaining(userId);
+    public List<ChatRoomResponse> getUserRooms(String userId) {
+        return chatRoomRepository.findByParticipantsContaining(userId)
+                .stream()
+                .map(ChatRoomDto::from)
+                .map(ChatRoomResponse::from)
+                .toList();
     }
 
     public void deleteRoom(String roomId) {
@@ -98,12 +106,16 @@ public class ChatRoomService {
         log.info("Chat room {} deleted", roomId);
     }
 
-    public List<ChatRoom> getRoomsByUserId(String userId) {
-        return chatRoomRepository.findByActiveParticipantsContaining(userId);
+    public List<ChatRoomDto> getRoomsByUserId(String userId) {
+        return chatRoomRepository.findByActiveParticipantsContaining(userId)
+                .stream()
+                .map(ChatRoomDto::from)
+                .toList();
     }
     
     public List<String> getRoomParticipants(String roomId) {
-        ChatRoom room = getRoom(roomId);
+        ChatRoom room = chatRoomRepository.findById(roomId)
+                .orElseThrow(() -> new RuntimeException("Chat room not found: " + roomId));
         synchronized (room) {
             List<String> participants = room.getActiveParticipants();
             log.info("Current participants in chat room {}: {}", roomId, participants);
@@ -112,7 +124,8 @@ public class ChatRoomService {
     }
     
     public void removeFromActiveParticipants(String roomId, String userId) {
-        ChatRoom room = getRoom(roomId);
+        ChatRoom room = chatRoomRepository.findById(roomId)
+                .orElseThrow(() -> new RuntimeException("Chat room not found: " + roomId));
         synchronized (room) {
             room.getActiveParticipants().remove(userId);
             

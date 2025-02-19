@@ -1,4 +1,4 @@
-package com.imap143.service;
+package com.imap143.application.service;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -10,10 +10,10 @@ import org.slf4j.LoggerFactory;
 import org.springframework.messaging.simp.SimpMessageSendingOperations;
 import org.springframework.stereotype.Service;
 
-import com.imap143.dto.ChatMessageDto;
-import com.imap143.dto.ParticipantUpdateMessage;
-import com.imap143.model.ChatMessage;
-import com.imap143.model.ChatRoom;
+import com.imap143.api.dto.response.ChatRoomResponse;
+import com.imap143.application.dto.ChatMessageDto;
+import com.imap143.application.dto.ParticipantUpdateMessage;
+import com.imap143.domain.entity.ChatMessage;
 
 import lombok.RequiredArgsConstructor;
 
@@ -53,7 +53,7 @@ public class WebRTCService {
     }
     
     public void broadcastParticipantList(String roomId) {
-        ChatRoom room = chatRoomService.getRoom(roomId);
+        ChatRoomResponse room = chatRoomService.getRoom(roomId);
         List<String> participants = new ArrayList<>(room.getActiveParticipants());
         
         // Send updated participant list to all participants
@@ -67,7 +67,7 @@ public class WebRTCService {
     
     public void addParticipant(String roomId, String userId) {
         // Participant addition and storage
-        ChatRoom room = chatRoomService.joinRoom(roomId, userId);
+        ChatRoomResponse room = chatRoomService.joinRoom(roomId, userId);
         
         log.info("New participant added: {} to room: {}", userId, roomId);
         
@@ -108,7 +108,7 @@ public class WebRTCService {
     }
     
     public void removeParticipant(String roomId, String userId) {
-        ChatRoom room = chatRoomService.getRoom(roomId);
+        ChatRoomResponse room = chatRoomService.getRoom(roomId);
         if (room != null) {
             // Check if the user's WebSocket session still exists
             if (webSocketSessionService.hasActiveSession(userId)) {
@@ -145,7 +145,7 @@ public class WebRTCService {
     }
     
     public List<String> getRoomParticipants(String roomId) {
-        ChatRoom room = chatRoomService.getRoom(roomId);
+        ChatRoomResponse room = chatRoomService.getRoom(roomId);
         return new ArrayList<>(room.getActiveParticipants());
     }
 } 

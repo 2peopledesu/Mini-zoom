@@ -1,6 +1,6 @@
-package com.imap143.dto;
+package com.imap143.application.dto;
 
-import com.imap143.model.ChatMessage.MessageType;
+import com.imap143.domain.entity.ChatMessage.MessageType;
 
 import lombok.Data;
 
