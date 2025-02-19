@@ -2,6 +2,8 @@
 
 A web-based video chat application that provides real-time video conferencing and chat functionality, built with React and Spring Boot.
 
+![Mini-zoom Preview](doc/sample.png)
+
 ## Features
 
 ### 1. Video Conference
