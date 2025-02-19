@@ -1,4 +1,4 @@
-package com.imap143.service;
+package com.imap143.application.service;
 
 import java.io.IOException;
 import java.nio.file.Files;

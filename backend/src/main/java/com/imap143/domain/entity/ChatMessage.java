@@ -1,4 +1,4 @@
-package com.imap143.model;
+package com.imap143.domain.entity;
 
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;

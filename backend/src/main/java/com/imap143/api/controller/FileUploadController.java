@@ -1,8 +1,9 @@
-package com.imap143.controller;
+package com.imap143.api.controller;
 
 import java.util.HashMap;
 import java.util.Map;
 
+import com.imap143.application.service.FileStorageService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
@@ -14,8 +15,6 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartException;
 import org.springframework.web.multipart.MultipartFile;
-
-import com.imap143.service.FileStorageService;
 
 import lombok.RequiredArgsConstructor;
 

@@ -1,4 +1,4 @@
-package com.imap143.service;
+package com.imap143.application.service;
 
 import java.util.Collections;
 import java.util.HashSet;

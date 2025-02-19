@@ -1,4 +1,4 @@
-package com.imap143.model;
+package com.imap143.domain.entity;
 
 import java.util.ArrayList;
 import java.util.List;
