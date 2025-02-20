@@ -36,7 +36,7 @@ public class ChatMessageService {
         List<ChatMessage> messages = chatMessageRepository.findByRoomIdOrderByTimestampAsc(roomId);
         return messages.stream()
             .map(ChatMessageResponse::from)
-            .collect(Collectors.toList());
+            .toList();
     }
 
     public List<ChatMessageResponse> getRoomMessagesSince(String roomId, long timestamp) {
@@ -44,6 +44,10 @@ public class ChatMessageService {
             .findByRoomIdAndTimestampGreaterThanOrderByTimestampAsc(roomId, timestamp);
         return messages.stream()
             .map(ChatMessageResponse::from)
-            .collect(Collectors.toList());
+            .toList();
+    }
+
+    public void deleteMessage(String roomId) {
+        chatMessageRepository.deleteByRoomId(roomId);
     }
 } 

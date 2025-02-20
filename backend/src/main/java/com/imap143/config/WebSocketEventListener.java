@@ -2,13 +2,13 @@ package com.imap143.config;
 
 import java.util.List;
 
-import com.imap143.application.dto.ChatRoomDto;
 import org.springframework.context.event.EventListener;
 import org.springframework.messaging.simp.stomp.StompHeaderAccessor;
 import org.springframework.stereotype.Component;
 import org.springframework.web.socket.messaging.SessionConnectEvent;
 import org.springframework.web.socket.messaging.SessionDisconnectEvent;
 
+import com.imap143.application.dto.ChatRoomDto;
 import com.imap143.application.service.ChatRoomService;
 import com.imap143.application.service.WebRTCService;
 import com.imap143.application.service.WebSocketSessionService;
@@ -37,7 +37,6 @@ public class WebSocketEventListener {
             List<ChatRoomDto> userRooms = chatRoomService.getRoomsByUserId(userId);
             for (ChatRoomDto room : userRooms) {
                 webRTCService.removeParticipant(room.getId(), userId);
-                chatRoomService.removeFromActiveParticipants(room.getId(), userId);
             }
         } else {
             log.warn("Failed to find userId - Session ID: {}", sessionId);

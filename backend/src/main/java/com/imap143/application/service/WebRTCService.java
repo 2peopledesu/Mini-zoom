@@ -23,6 +23,7 @@ public class WebRTCService {
     
     private final SimpMessageSendingOperations messagingTemplate;
     private final ChatRoomService chatRoomService;
+    private final ChatMessageService chatMessageService;
     private final WebSocketSessionService webSocketSessionService;
     
     private static final Logger log = LoggerFactory.getLogger(WebRTCService.class);
@@ -108,21 +109,20 @@ public class WebRTCService {
     }
     
     public void removeParticipant(String roomId, String userId) {
+        if (webSocketSessionService.hasActiveSession(userId)) {
+            log.info("User {} still has an active WebSocket session, so not removed from room {}", userId, roomId);
+            return;
+        }
+        
         ChatRoomResponse room = chatRoomService.getRoom(roomId);
         if (room != null) {
-            // Check if the user's WebSocket session still exists
-            if (webSocketSessionService.hasActiveSession(userId)) {
-                log.info("User {} still has an active WebSocket session, so not removed from room {}", userId, roomId);
-                return;
-            }
-            
-            chatRoomService.leaveRoom(roomId, userId);
             List<String> activeParticipants = room.getActiveParticipants();
-            
-            if (activeParticipants.isEmpty()) {
-                chatRoomService.deleteRoom(roomId);
-                log.info("Empty chat room deleted: {}", roomId);
+            if (activeParticipants.size() <= 1) {
+                chatMessageService.deleteMessage(roomId);
+                chatRoomService.removeFromActiveParticipants(roomId, userId);
+                log.info("Empty chat room and messages deleted: {}", roomId);
             } else {
+                chatRoomService.removeFromActiveParticipants(roomId, userId);
                 broadcastParticipantList(roomId);
                 
                 ChatMessageDto.SignalRequest peerLeaveSignal = new ChatMessageDto.SignalRequest();
@@ -131,7 +131,9 @@ public class WebRTCService {
                 peerLeaveSignal.setType(ChatMessage.MessageType.LEAVE);
                 
                 activeParticipants.forEach(participantId -> {
-                    messagingTemplate.convertAndSend(QUEUE_SIGNAL + participantId, peerLeaveSignal);
+                    if (!participantId.equals(userId)) {
+                        messagingTemplate.convertAndSend(QUEUE_SIGNAL + participantId, peerLeaveSignal);
+                    }
                 });
             }
         }

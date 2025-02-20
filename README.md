@@ -9,7 +9,7 @@ A web-based video chat application that provides real-time video conferencing an
 ### 1. Video Conference
 
 - Real-time video communication using WebRTC
-- Support for multiple participants (up to 9)
+- Support for multiple participants
 - Dynamic grid layout based on participant count
 - Automatic video quality adjustment
 - Display participant names on video feeds

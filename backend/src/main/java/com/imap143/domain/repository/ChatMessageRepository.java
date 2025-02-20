@@ -11,4 +11,5 @@ import com.imap143.domain.entity.ChatMessage;
 public interface ChatMessageRepository extends MongoRepository<ChatMessage, String> {
     List<ChatMessage> findByRoomIdOrderByTimestampAsc(String roomId);
     List<ChatMessage> findByRoomIdAndTimestampGreaterThanOrderByTimestampAsc(String roomId, long timestamp);
+    void deleteByRoomId(String roomId);
 } 
