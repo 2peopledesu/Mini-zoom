@@ -25,6 +25,7 @@ public class ChatMessage {
         IMAGE,          // add image type
         OFFER,          // WebRTC offer
         ANSWER,         // WebRTC answer
-        ICE_CANDIDATE   // WebRTC ICE candidate
+        ICE_CANDIDATE,   // WebRTC ICE candidate
+        MEDIA_STATUS
     }
-} 
+}

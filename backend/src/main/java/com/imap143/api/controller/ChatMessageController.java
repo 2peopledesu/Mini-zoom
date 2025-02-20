@@ -16,8 +16,10 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestHeader;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.imap143.api.dto.response.ChatMessageResponse;
 import com.imap143.application.dto.ChatMessageDto;
+import com.imap143.application.dto.MediaStatusDto;
 import com.imap143.application.service.ChatMessageService;
 import com.imap143.application.service.WebRTCService;
 import com.imap143.application.service.WebSocketSessionService;
@@ -33,6 +35,7 @@ public class ChatMessageController {
     private final ChatMessageService chatMessageService;
     private final WebRTCService webRTCService;
     private final WebSocketSessionService webSocketSessionService;
+    private final ObjectMapper objectMapper;
     private static final Logger log = LoggerFactory.getLogger(ChatMessageController.class);
     private static final String TOPIC_ROOM = "/topic/room.";
 
@@ -107,6 +110,12 @@ public class ChatMessageController {
             "/queue/signal." + request.getTargetId(),
             request
         );
+    }
+
+    @MessageMapping("/signal.media_status")
+    public void handleMediaStatusChange(@Payload ChatMessageDto.SignalRequest request) {
+        MediaStatusDto mediaStatus = objectMapper.convertValue(request.getSignal(), MediaStatusDto.class);
+        webRTCService.handleMediaStatusChange(request.getRoomId(), request.getSenderId(), mediaStatus);
     }
 
     @GetMapping("/api/rooms/{roomId}/messages")

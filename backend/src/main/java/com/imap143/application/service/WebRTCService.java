@@ -12,6 +12,7 @@ import org.springframework.stereotype.Service;
 
 import com.imap143.api.dto.response.ChatRoomResponse;
 import com.imap143.application.dto.ChatMessageDto;
+import com.imap143.application.dto.MediaStatusDto;
 import com.imap143.application.dto.ParticipantUpdateMessage;
 import com.imap143.domain.entity.ChatMessage;
 
@@ -136,6 +137,24 @@ public class WebRTCService {
                     }
                 });
             }
+        }
+    }
+
+    public void handleMediaStatusChange(String roomId, String userId, MediaStatusDto mediaStatus) {
+    ChatRoomResponse room = chatRoomService.getRoom(roomId);
+    if (room != null) {
+        ChatMessageDto.SignalRequest mediaStatusSignal = new ChatMessageDto.SignalRequest();
+        mediaStatusSignal.setType(ChatMessage.MessageType.MEDIA_STATUS);
+        mediaStatusSignal.setRoomId(roomId);
+        mediaStatusSignal.setSenderId(userId);
+        mediaStatusSignal.setSignal(mediaStatus);
+        
+        // notice media status change to other participants
+        room.getActiveParticipants().stream()
+            .filter(participantId -> !participantId.equals(userId))
+            .forEach(participantId -> 
+                messagingTemplate.convertAndSend(QUEUE_SIGNAL + participantId, mediaStatusSignal)
+            );
         }
     }
     

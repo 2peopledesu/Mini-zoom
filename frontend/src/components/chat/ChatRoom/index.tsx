@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { Box, Container, Grid } from "@mui/material";
 import VideoArea from "./VideoArea";
 import ChatArea from "./ChatArea";
@@ -15,6 +15,9 @@ export const ChatRoom: React.FC<ChatRoomProps> = ({
   userId,
   userName,
 }) => {
+  const [isAudioEnabled, setIsAudioEnabled] = useState(true);
+  const [isVideoEnabled, setIsVideoEnabled] = useState(true);
+
   const {
     messages,
     localStream,
@@ -23,6 +26,26 @@ export const ChatRoom: React.FC<ChatRoomProps> = ({
     handleSendMessage,
     handleFileUpload,
   } = useChatRoom({ roomId, userId, userName });
+
+  const handleToggleAudio = () => {
+    if (localStream) {
+      const audioTrack = localStream.getAudioTracks()[0];
+      if (audioTrack) {
+        audioTrack.enabled = !audioTrack.enabled;
+        setIsAudioEnabled(audioTrack.enabled);
+      }
+    }
+  };
+
+  const handleToggleVideo = () => {
+    if (localStream) {
+      const videoTrack = localStream.getVideoTracks()[0];
+      if (videoTrack) {
+        videoTrack.enabled = !videoTrack.enabled;
+        setIsVideoEnabled(videoTrack.enabled);
+      }
+    }
+  };
 
   return (
     <Container maxWidth="xl" sx={{ height: "100vh", py: 2 }}>
@@ -33,6 +56,10 @@ export const ChatRoom: React.FC<ChatRoomProps> = ({
             localStream={localStream}
             userName={userName}
             userNames={userNames}
+            onToggleAudio={handleToggleAudio}
+            onToggleVideo={handleToggleVideo}
+            isAudioEnabled={isAudioEnabled}
+            isVideoEnabled={isVideoEnabled}
           />
         </Grid>
         <Grid item xs={12} sx={{ height: "40%" }}>
